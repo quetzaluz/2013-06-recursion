@@ -12,13 +12,20 @@ var stringifyJSON = function (obj) {
   if (typeof obj === 'number') {
     stringified = obj.toString();
   }
-  if (typeof obj === 'boolean' || 'null') {
+  if (typeof obj === 'boolean') {
     stringified = String(obj);
   }
-  else {
-    for (var i = 0; i < obj.length; i++) {
-      stringified += obj[i]
-    }
+  if (typeof obj === 'string') {
+    stringified = '"'+obj.toString()+'"';
   }
+  if (typeof obj === 'object' && !obj) {
+    stringified = 'null';
+  }
+
+  //else {
+  //  for (var i = 0; i < obj.length; i++) {
+  //    stringified += obj[i]
+  //  }
+  //}
   return stringified;
 }
