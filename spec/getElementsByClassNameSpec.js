@@ -17,7 +17,9 @@ describe("getElementsByClassName", function(){
 
       var result = getElementsByClassName("targetClassName");
       var expectedNodeList = document.getElementsByClassName("targetClassName");
-      var equality = _.isEqual(result, expectedNodeList); // why can't we use `===` here?
+      //trying to apply fix to testrunner mentioned by instructor
+      var expected = [].slice.call(expectedNodeList, 0)
+      var equality = _.isEqual(result, expected); // why can't we use `===` here?
       expect(equality).toBeTruthy();
 
       $rootElement.remove();
