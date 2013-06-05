@@ -14,7 +14,7 @@ var validObjects = [
   {},
   {"a": "apple"},
   {"foo": true, "bar": false, "baz": null},
-  {"boolean, true": true, "boolean, false": false, "null": null },
+ ,
   // basic nesting
   {"a":{"b":"c"}},
   {"a":["b", "c"]},

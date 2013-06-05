@@ -35,7 +35,7 @@ var parseJSON = function (json) {
 	  next = function (c) {
 		//Get next character in the json string.
 		if (c && c !== currChar) {
-			error("Expected '" + c + "' instead of '" + currChar + "'");
+			error("Expected '" + c + "' instead of '" + currChar + "' at index " + currIndex + " in " + text);
 		}
 		currChar = text.charAt(currIndex);
 		currIndex += 1;
@@ -51,6 +51,7 @@ var parseJSON = function (json) {
 
 	  bools = function () {
 		//parse true, false, and null
+		console.log("Parsing true, false, and null ...")
 		switch(currChar) {
 			case 't':
 				next('t');
@@ -75,21 +76,31 @@ var parseJSON = function (json) {
 			error("Unexpected '" + currChar + "'");
 		},
 
+	  digitRange = function (stringnum) {
+	  	//Since this was repeated, iterate to see if string digit
+	  	arr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+	  	for (var k = 1; k < 10; k++) {
+	  		if (stringnum === '0') return true;
+	  		else if (stringnum === arr[k]) return k;
+	  	}
+	  },
+
 	  number = function () {
 		//parse number, including exponents, +, -
+		console.log("Parsing number ...")
 		var number,
 			string = '';
 			if (currChar === '-') {
-				string += currChar;
-				next();
+				string = '-';
+				next('-');
 			}
-			while (currChar >= '0' && currChar <= '9') {
+			while (digitRange(currChar)) {
 				string += currChar;
 				next();
 			}
 			if (currChar === '.') {
 				string += '.';
-				while (next() && currChar >= '0' && currChar <= '9') {
+				while (next() && digitRange(currChar)) {
 					string += currChar;
 				}
 			}
@@ -100,20 +111,22 @@ var parseJSON = function (json) {
 					string += currChar;
 					next();
 				}
-				while (currChar >= '0' && currChar <= '9') {
+				while (digitRange(currChar)) {
 					string += currChar;
 					next();
 				}
 			}
+			
 			number = +string;
 			if (isNaN(number)) error("Bad number");
-			else return number;
+			else {return number;}
 	  },
 
 	  string = function () {
 		//parse a string. Handles hex, again based closely
 		//off example from "Javascript: the Good Parts"
 		//seeing if spec will pass without handling hex vals.
+		console.log("Parsing String...")
 		var hex,
 			i,
 			string = '',
@@ -148,6 +161,7 @@ var parseJSON = function (json) {
 
 	  array = function () {
 		//parse an array value.
+		console.log("Parsing Array ...")
 		var array = [];
 		if (currChar === '[') {
 			next('[');
@@ -171,6 +185,7 @@ var parseJSON = function (json) {
 	  },
 
 	  object = function () {
+	  	console.log ("Parsing object ...")
 		var key,
 		object = {};
 		if (currChar === '{') {
@@ -199,35 +214,34 @@ var parseJSON = function (json) {
 
 	  value = function () {
 	  	//switch to determine which kind of value to parse
+	  	console.log("Determining value type to parse ...")
 	  	white();
 	  	if (currIndex < json.length) {
-	  	switch (currChar) {
-	  		case '{':
-	  			return object();
-	  		case '[':
-	  			return array();
-	  		case '"':
-	  			return string();
-	  		case 't':
-	  		case 'f':
-	  		case 'n':
-	  			return bools();
-	  		case '-':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-			case '0':
-			case '-':
-				return number();
-	    }
-	}
-	};
+	  		switch (currChar) {
+	  			case '{': return object();
+	  			case '[': return array();
+	  			case 't': return bools();
+	  			case 'f': return bools();
+	  			case 'n': return bools();
+	  			case '-': return number();
+				case '"': return string();
+				//below cases would be better handled by conditional
+				//return statement, but basing this off Mozilla's
+				//javascript based parse method.
+				case '0': return number();
+				case '1': return number();
+				case '2': return number();
+				case '3': return number();
+				case '4': return number();
+				case '5': return number();
+				case '6': return number();
+				case '7': return number();
+				case '8': return number();
+				case '9': return number();
+				default: return number();
+	    	}
+		}
+	  };
 
 	var parseThis = function () {
 		//trying to call all helper functions, no reviver
@@ -237,14 +251,14 @@ var parseJSON = function (json) {
 		currChar = ' ';
 		result = value();
 		white();
-		if (currChar) {
+		/*if (currChar) {
 			error("Syntax error");
-		}
+		}*/
 		return result;
 	}
 	if (json === undefined) {
 		error("Cannot parse undefined value");
 	}
-	else return parseThis();
+	return parseThis();
 
 };

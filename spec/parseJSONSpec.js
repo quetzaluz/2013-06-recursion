@@ -6,6 +6,11 @@ describe("parseJSON", function(){
       var result = parseJSON(JSON.stringify(obj));
       var equality = _.isEqual(result, obj); // why can't we use `===` here?
       expect(equality).toBeTruthy();
+      //adding this to try and catch values that aren't parsing.
+      if (!_.isEqual(result, obj)) {
+        console.log(result);
+        console.log(obj);
+      }
     });
 
     // if you really want to stress test your code, try this...
