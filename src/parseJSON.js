@@ -114,7 +114,7 @@ var parseJSON = function (json) {
 		//parse a string. Handles hex, again based closely
 		//off example from "Javascript: the Good Parts"
 		//seeing if spec will pass without handling hex vals.
-		var //hex,
+		var hex,
 			i,
 			string = '',
 			uffff;
@@ -122,17 +122,24 @@ var parseJSON = function (json) {
 			while (next()) {
 				if (currChar === '"') {
 					next();
-					//if (currChar === 'u') {
-					//	uffff = 0;
-					//	for (i = 0; i < 4; i +=1) {
-					//		hex = partInt(next(), 16);
-					//		if (!isFinite(hex)) break;
-					//		uffff = uffff * 16 + hex;
-					//	}
-					//	string += String.fromCharCode(uffff);
+					return string;
+				} else if (currChar === '\\') {
+					next();
+					if (currChar === 'u') {
+						uffff = 0;
+						for (i = 0; i < 4; i +=1) {
+							hex = parseInt(next(), 16);
+							if (!isFinite(hex)) {break;}
+							uffff = uffff * 16 + hex;
+						}
+						string += String.fromCharCode(uffff);
 					} else if (typeof escapee[currChar] === 'string') {
 						string += escapee[currChar];
-					} else string += currChar;
+					} else {
+						break;
+					}
+				} else {
+					string += currChar;
 				}
 			}
 		}
@@ -188,11 +195,12 @@ var parseJSON = function (json) {
 			}
 		}
 		error("Bad object");
-	  },
+	  };
 
 	  value = function () {
 	  	//switch to determine which kind of value to parse
 	  	white();
+	  	if (currIndex < json.length) {
 	  	switch (currChar) {
 	  		case '{':
 	  			return object();
@@ -200,17 +208,32 @@ var parseJSON = function (json) {
 	  			return array();
 	  		case '"':
 	  			return string();
+	  		case 't':
+	  		case 'f':
+	  		case 'n':
+	  			return bools();
 	  		case '-':
-	  			return number();
-	  		default:
-	  			return currChar >= '0' && currChar <= '9' ? number () : bools();
-	  	}
-	  };
-	return function (json) {
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+			case '0':
+			case '-':
+				return number();
+	    }
+	}
+	};
+
+	var parseThis = function () {
 		//trying to call all helper functions, no reviver
 		var result;
 		text = json;
-		charAt = 0;
+		currIndex = 0;
 		currChar = ' ';
 		result = value();
 		white();
@@ -219,5 +242,9 @@ var parseJSON = function (json) {
 		}
 		return result;
 	}
+	if (json === undefined) {
+		error("Cannot parse undefined value");
+	}
+	else return parseThis();
 
 };
