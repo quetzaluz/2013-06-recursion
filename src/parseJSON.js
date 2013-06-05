@@ -15,7 +15,7 @@ var parseJSON = function (json) {
 	  escapee = {
 		'"': '"',
 		'\\': '\\',
-		b: 'b',
+		b: '\b',
 		f: '\f',
 		n: '\n',
 		r: '\r',
@@ -76,15 +76,6 @@ var parseJSON = function (json) {
 			error("Unexpected '" + currChar + "'");
 		},
 
-	  digitRange = function (stringnum) {
-	  	//Since this was repeated, iterate to see if string digit
-	  	arr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-	  	for (var k = 1; k < 10; k++) {
-	  		if (stringnum === '0') return true;
-	  		else if (stringnum === arr[k]) return k;
-	  	}
-	  },
-
 	  number = function () {
 		//parse number, including exponents, +, -
 		console.log("Parsing number ...")
@@ -94,13 +85,13 @@ var parseJSON = function (json) {
 				string = '-';
 				next('-');
 			}
-			while (digitRange(currChar)) {
+			while (currChar <= '9' && currChar >= '0') {
 				string += currChar;
 				next();
 			}
 			if (currChar === '.') {
 				string += '.';
-				while (next() && digitRange(currChar)) {
+				while (next() && currChar <= '9' && currChar >= '0') {
 					string += currChar;
 				}
 			}
@@ -111,7 +102,7 @@ var parseJSON = function (json) {
 					string += currChar;
 					next();
 				}
-				while (digitRange(currChar)) {
+				while (currChar <= '9' && currChar >= '0') {
 					string += currChar;
 					next();
 				}
@@ -223,22 +214,9 @@ var parseJSON = function (json) {
 	  			case 't': return bools();
 	  			case 'f': return bools();
 	  			case 'n': return bools();
-	  			case '-': return number();
 				case '"': return string();
-				//below cases would be better handled by conditional
-				//return statement, but basing this off Mozilla's
-				//javascript based parse method.
-				case '0': return number();
-				case '1': return number();
-				case '2': return number();
-				case '3': return number();
-				case '4': return number();
-				case '5': return number();
-				case '6': return number();
-				case '7': return number();
-				case '8': return number();
-				case '9': return number();
-				default: return number();
+				default:
+				  return (currChar === '-' || currChar <= '9' && currChar >=0) ? number() : number();
 	    	}
 		}
 	  };
@@ -247,8 +225,10 @@ var parseJSON = function (json) {
 		//trying to call all helper functions, no reviver
 		var result;
 		text = json;
-		currIndex = 0;
+		currIndex = 0; 
 		currChar = ' ';
+		//had bug in parsing one character JSON strings, this fixed it:
+		if (text.length === 1) {currChar = text[0]; currIndex = -1}
 		result = value();
 		white();
 		/*if (currChar) {
